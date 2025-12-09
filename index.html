@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baraja de Cartas Automática</title>
+    <style>
+        /* CSS para el estilo */
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        #area-juego {
+            display: flex;
+            gap: 50px;
+            align-items: flex-start;
+            margin-top: 30px;
+        }
+
+        .contenedor-carta {
+            text-align: center;
+        }
+
+        #mazo {
+            width: 150px; /* Ancho de la carta */
+            height: 220px; /* Alto de la carta */
+            border: 2px solid #333; /* Borde sólido */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            background-color: #e0e0e0;
+            border-radius: 6px;
+            transition: transform 0.1s;
+        }
+
+        #mazo:hover {
+            transform: translateY(-5px); /* Pequeño efecto al pasar el mouse */
+        }
+
+        .carta {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        #carta-sacada {
+            width: 150px;
+            height: 220px;
+            border: 1px solid #aaa;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+        }
+
+        #carta-sacada img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 6px;
+        }
+
+        .mensaje-mazo {
+            position: absolute;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 1em;
+            text-align: center;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .conteo {
+            margin-top: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🃏 Baraja de Cartas Automática</h1>
+
+    <div id="area-juego">
+        <div class="contenedor-carta">
+            <h3>Mazo Revuelto (<span id="conteo-mazo">0</span>)</h3>
+            <div id="mazo" title="Haz click aquí para sacar una carta">
+                <p class="mensaje-mazo">Cargando...</p>
+            </div>
+        </div>
+
+        <div class="contenedor-carta">
+            <h3>Carta Sacada</h3>
+            <div id="carta-sacada">
+                <p>Haz click en el mazo para empezar.</p>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- 1. CONFIGURACIÓN DEL DESARROLLADOR ---
+        // ARRAY de URLs de las cartas (Cargá aquí las URLs de tus imágenes)
+        const URLS_CARTAS = [
+            'https://imgur.com/cJRc6Uj.png',
+            'https://imgur.com/0RvDFva.png',
+            'https://imgur.com/5UYOBzQ.png',
+            // Agrega tantas URLs como necesites
+        ];
+
+        // URL de la imagen que actuará como la TAPA del mazo
+        const URL_TAPA_MAZO = 'https://imgur.com/Ybgg2Yg.png'; 
+        // ¡IMPORTANTE! Reemplaza 'https://i.imgur.com/card_back.png' 
+        // con la URL de una imagen de reverso de carta (p. ej., una imagen azul o roja).
+
+        // --- 2. VARIABLES Y LÓGICA DEL JUEGO ---
+        let mazoRevuelto = []; 
+        const mazoDiv = document.getElementById('mazo');
+        const cartaSacadaDiv = document.getElementById('carta-sacada');
+        const conteoMazoSpan = document.getElementById('conteo-mazo');
+
+        /**
+         * Función para mezclar (barajar) el array de cartas (Fisher-Yates).
+         */
+        function barajar(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [
+                    array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        /**
+         * Inicializa el mazo: baraja las cartas y establece la tapa.
+         */
+        function inicializarMazo() {
+            // Clona las URLs originales y las baraja
+            mazoRevuelto = barajar([...URLS_CARTAS]);
+
+            // Configura el mazo visible con la imagen de tapa
+            mazoDiv.innerHTML = ''; 
+            const imagenTapa = document.createElement('img');
+            imagenTapa.src = URL_TAPA_MAZO; 
+            imagenTapa.classList.add('carta');
+            mazoDiv.appendChild(imagenTapa);
+
+            // Mensaje de ayuda sobre la tapa
+            const mensajeMazo = document.createElement('p');
+            mensajeMazo.classList.add('mensaje-mazo');
+            mensajeMazo.textContent = 'Click para sacar';
+            mazoDiv.appendChild(mensajeMazo);
+            
+            // Actualiza el contador
+            conteoMazoSpan.textContent = mazoRevuelto.length;
+            
+            cartaSacadaDiv.innerHTML = '<p>¡Mazo listo! Empezá a sacar cartas.</p>';
+        }
+
+        /**
+         * Saca la carta superior del mazo al hacer click.
+         */
+        mazoDiv.addEventListener('click', () => {
+            if (mazoRevuelto.length === 0) {
+                cartaSacadaDiv.innerHTML = '<p>¡El mazo está vacío! Fin del juego.</p>';
+                mazoDiv.title = "Mazo vacío";
+                // Opcional: remover la imagen de tapa para mostrar el vacío
+                mazoDiv.innerHTML = '<p class="mensaje-mazo" style="background: none; color: #333;">Mazo vacío</p>';
+                return;
+            }
+
+            // Saca la última carta (la superior del mazo)
+            const cartaSacadaUrl = mazoRevuelto.pop();
+
+            // Actualiza el contador
+            conteoMazoSpan.textContent = mazoRevuelto.length;
+
+            // Muestra la carta sacada
+            cartaSacadaDiv.innerHTML = ''; 
+            const imagenCarta = document.createElement('img');
+            imagenCarta.src = cartaSacadaUrl;
+            imagenCarta.alt = "Carta sacada";
+            cartaSacadaDiv.appendChild(imagenCarta);
+        });
+
+        // Inicia el juego automáticamente al cargar la página
+        inicializarMazo(); 
+
+    </script>
+</body>
+</html>
