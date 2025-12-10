@@ -3,143 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baraja de Cartas Automática</title>
+    <title>Simulación de Escenarios</title>
     <style>
-        /* CSS para el estilo */
+        /* Estilos generales (Sin cambios significativos) */
         body {
             font-family: sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
+            padding: 20px;
+            background-color: #e9f7ef;
         }
 
-        #area-juego {
-            display: flex;
-            gap: 50px;
-            align-items: flex-start;
-            margin-top: 30px;
+        /* Contador de Turnos/Años */
+        #contador-turno {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #004d40;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            border: 3px solid #004d40;
+            border-radius: 10px;
+            background-color: #c8e6c9;
         }
 
-        .contenedor-carta {
-            text-align: center;
-        }
-
-        #mazo {
-            width: 150px; /* Ancho de la carta */
-            height: 220px; /* Alto de la carta */
-            border: 2px solid #333; /* Borde sólido */
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* Botón de Acción */
+        #btn-turno {
+            padding: 15px 30px;
+            font-size: 1.5em;
+            font-weight: bold;
             cursor: pointer;
-            position: relative;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-            background-color: #e0e0e0;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.2s, transform 0.1s;
+            margin-bottom: 30px;
+        }
+
+        #btn-turno:hover {
+            background-color: #388e3c;
+            transform: translateY(-2px);
+        }
+        
+        #btn-turno:disabled {
+            background-color: #a5d6a7;
+            cursor: not-allowed;
+        }
+
+        /* Área de Cartas Mostradas */
+        #cartas-mostradas {
+            min-height: 250px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .carta-mostrada-item {
+            width: 130px;
+            height: 190px;
+            border: 1px solid #333;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             border-radius: 6px;
-            transition: transform 0.1s;
         }
 
-        #mazo:hover {
-            transform: translateY(-5px); /* Pequeño efecto al pasar el mouse */
-        }
-
-        .carta {
+        .carta-mostrada-item img {
             width: 100%;
             height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
             object-fit: cover;
             border-radius: 6px;
         }
 
-        #carta-sacada {
-            width: 150px;
-            height: 220px;
-            border: 1px solid #aaa;
-            background-color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9em;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            border-radius: 6px;
-        }
-
-        #carta-sacada img {
-            max-width: 100%;
-            max-height: 100%;
-            border-radius: 6px;
-        }
-
-        .mensaje-mazo {
-            position: absolute;
-            color: white;
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 1em;
+        .mensaje-inicial, .mensaje-fin {
+            font-size: 1.2em;
+            color: #555;
             text-align: center;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
         }
-
-        .conteo {
-            margin-top: 10px;
-            font-size: 1.1em;
-            font-weight: bold;
+        
+        .mensaje-fin {
+            color: #d32f2f;
+            font-size: 3em;
+            font-weight: 900;
         }
     </style>
 </head>
 <body>
 
-    <h1>🃏 Baraja de Cartas Automática</h1>
+    <div id="contador-turno">Cargando...</div>
 
-    <div id="area-juego">
-        <div class="contenedor-carta">
-            <h3>Mazo Revuelto (<span id="conteo-mazo">0</span>)</h3>
-            <div id="mazo" title="Haz click aquí para sacar una carta">
-                <p class="mensaje-mazo">Cargando...</p>
-            </div>
-        </div>
+    <button id="btn-turno" disabled>Iniciar Simulación</button>
 
-        <div class="contenedor-carta">
-            <h3>Carta Sacada</h3>
-            <div id="carta-sacada">
-                <p>Haz click en el mazo para empezar.</p>
-            </div>
-        </div>
+    <div id="cartas-mostradas">
+        <p class="mensaje-inicial">Presiona "Iniciar Simulación" para ver el resultado del primer año.</p>
     </div>
 
 
     <script>
         // --- 1. CONFIGURACIÓN DEL DESARROLLADOR ---
-        // ARRAY de URLs de las cartas (Cargá aquí las URLs de tus imágenes)
-        const URLS_CARTAS = [
-            'https://imgur.com/cJRc6Uj.png',
-            'https://imgur.com/0RvDFva.png',
-            'https://imgur.com/5UYOBzQ.png',
-            // Agrega tantas URLs como necesites
+        // Recordatorio: Las rutas deben ser relativas a la carpeta 'index.html' (ej: 'cartas/nombre.jpg')
+        
+                const URLS_MAZO_BUENO = [
+            '0 - Ciudad Conectada (Front).png',
+            '1 - Desarrollo integral (Front).png',
+            '2 - Fuentes Limpias (Front).png',
+            '3 - Materiales Abundantes (Front).png',
+            '4 - Producción de calidad (Front).png',
+            '5 - Redes Abundantes (Front).png',
+            '6 - Economia de servicios (Front).png', 
+            '7 - Impulso Industrial (Front).png',
+            '8 - Unnamed (Front).png',
+            '9 - Infraestructura Moderna (Front).png',
+            '10 - Vivienda Temporal (Front).png',
+            '11 - Campaña de Sanidad (Front).png',
+            '12 - Ahorro Secreto (Front).png',
+            '13 - Rompecabezas secreto (Front).png',
+            '14 - Semilla secreta (Front).png', 
+            '15 - Manantial (Front).png',
+            '16 - Tratamientos experimentales (Front).png',
+            '17 - Todo o nada (Front).png',
+            '18 - Comidad de mala calidad (Front).png',
+            '19 - Construcciion Masiva (Front).png',
+            '20 - Exportacion de alimentos (Front).png',
+            '21 - Privatizacion del agua (Front).png',
+            '22 - Reduccion de gastos de sanidad (Front).png', 
+            '23 - Ciudad saludable (Front).png',
+            '24 - Reestructuracion urbana (Front).png',
+            '25 - Distribucion comunitaria (Front).png',
+            '26 - Innovacion urbana (Front).png',
+            '27 - Inversion Hidrica (Front).png',
+            '28 - Inversion masiva (Front).png',
+            '29 - Plan estatal integral (Front).png',
+            '30 - Plan de Emergencia (Front).png',
+            '31 - Reforma tributaria (Front).png',
+            '32 - Salud Privada (Front).png',
+            '33 - Vivienda para todos (Front).png',
+            '34 - Subsidios (Front).png',
+            '35 - Tratamiento intensivo (Front).png',
+            // ¡AGREGA MÁS CARTAS BUENAS AQUÍ!
         ];
 
-        // URL de la imagen que actuará como la TAPA del mazo
-        const URL_TAPA_MAZO = 'https://imgur.com/Ybgg2Yg.png'; 
-        // ¡IMPORTANTE! Reemplaza 'https://i.imgur.com/card_back.png' 
-        // con la URL de una imagen de reverso de carta (p. ej., una imagen azul o roja).
+        // URLs de cartas que representan eventos NEGATIVOS (1 carta se saca)
+        const URLS_MAZO_MALO = [
+            '36 - Unnamed (Front).png', 
+            '37 - Unnamed (Front).png', 
+            '38 - Unnamed (Front).png', 
+            '39 - Unnamed (Front).png', 
+            '40 - Unnamed (Front).png', 
+            '41 - Unnamed (Front).png', 
+            '42 - Unnamed (Front).png', 
+            '43 - Unnamed (Front).png', 
+            '44 - Unnamed (Front).png', 
+            '45 - Unnamed (Front).png', 
+            '46 - Unnamed (Front).png', 
+            '47 - Unnamed (Front).png', 
+            '48 - Unnamed (Front).png', 
+            '49 - Unnamed (Front).png', 
+            '50 - Unnamed (Front).png', 
+            '51 - Unnamed (Front).png', 
+            '52 - Unnamed (Front).png', 
+            '53 - Unnamed (Front).png', 
+            '54 - Unnamed (Front).png', 
+            '55 - Unnamed (Front).png', 
 
-        // --- 2. VARIABLES Y LÓGICA DEL JUEGO ---
-        let mazoRevuelto = []; 
-        const mazoDiv = document.getElementById('mazo');
-        const cartaSacadaDiv = document.getElementById('carta-sacada');
-        const conteoMazoSpan = document.getElementById('conteo-mazo');
+            // ¡AGREGA MÁS CARTAS MALAS AQUÍ!
+        ];
+        
+        
+        // --- 2. VARIABLES DE JUEGO Y ESTADO ---
+        let mazoBueno = []; 
+        let mazoMalo = [];  
+        let ultimasCartasSacadas = []; // *** NUEVA VARIABLE CLAVE: Guarda las URLs del turno anterior ***
 
+        let turnoActual = 0; 
+        const ANIO_INICIO = 2025;
+        const ANIO_FIN = 2055;
+        const MAX_TURNOS = ANIO_FIN - ANIO_INICIO + 1;
+
+        const cartasMostradasDiv = document.getElementById('cartas-mostradas');
+        const contadorTurnoDiv = document.getElementById('contador-turno');
+        const btnTurno = document.getElementById('btn-turno');
+
+        
         /**
-         * Función para mezclar (barajar) el array de cartas (Fisher-Yates).
+         * Implementación del algoritmo de Fisher-Yates para barajar.
          */
         function barajar(array) {
             let currentIndex = array.length, randomIndex;
@@ -153,60 +210,162 @@
         }
 
         /**
-         * Inicializa el mazo: baraja las cartas y establece la tapa.
+         * Saca 'n' cartas de un mazo, asegurando que ninguna repita la última extracción.
+         * Después de sacar, reintegra y baraja.
+         * * @param {Array} mazo - El array de cartas (mutable).
+         * @param {number} cantidad - Cantidad de cartas a sacar.
+         * @returns {Array} - Array de cartas sacadas.
          */
-        function inicializarMazo() {
-            // Clona las URLs originales y las baraja
-            mazoRevuelto = barajar([...URLS_CARTAS]);
-
-            // Configura el mazo visible con la imagen de tapa
-            mazoDiv.innerHTML = ''; 
-            const imagenTapa = document.createElement('img');
-            imagenTapa.src = URL_TAPA_MAZO; 
-            imagenTapa.classList.add('carta');
-            mazoDiv.appendChild(imagenTapa);
-
-            // Mensaje de ayuda sobre la tapa
-            const mensajeMazo = document.createElement('p');
-            mensajeMazo.classList.add('mensaje-mazo');
-            mensajeMazo.textContent = 'Click para sacar';
-            mazoDiv.appendChild(mensajeMazo);
+        function sacarCartas(mazo, cantidad, ultimasCartas) {
             
-            // Actualiza el contador
-            conteoMazoSpan.textContent = mazoRevuelto.length;
+            if (mazo.length < cantidad) {
+                console.error("No hay suficientes cartas en el mazo.");
+                return [];
+            }
+
+            let cartasDisponibles = [...mazo]; // Clonamos el mazo para trabajar con él
+            const cartasSacadas = [];
             
-            cartaSacadaDiv.innerHTML = '<p>¡Mazo listo! Empezá a sacar cartas.</p>';
+            // 1. Identificar las cartas del mazo que NO pueden salir
+            const cartasProhibidas = ultimasCartas.filter(url => cartasDisponibles.includes(url));
+            
+            // 2. Extraer cartas, garantizando la no repetición
+            for (let i = 0; i < cantidad; i++) {
+                // Filtramos las cartas que no pueden salir en esta extracción
+                let cartasCandidatas = cartasDisponibles.filter(url => !cartasSacadas.includes(url));
+                
+                // En el primer ciclo de extracción del turno, evitamos las cartas prohibidas
+                if (i === 0) {
+                    cartasCandidatas = cartasCandidatas.filter(url => !cartasProhibidas.includes(url));
+                }
+
+                if (cartasCandidatas.length === 0) {
+                    // Si no hay candidatos, usamos las que quedan, aunque se repitan (fallo de seguridad)
+                    // Esto solo ocurriría si el mazo es muy pequeño y no hay suficientes cartas únicas.
+                    cartasCandidatas = cartasDisponibles; 
+                }
+
+                // 3. Elegir una carta al azar entre las candidatas
+                const randomIndex = Math.floor(Math.random() * cartasCandidatas.length);
+                const cartaElegida = cartasCandidatas[randomIndex];
+
+                // 4. Mover la carta elegida a la lista de sacadas para este turno
+                cartasSacadas.push(cartaElegida);
+
+                // 5. Eliminar la carta elegida de las disponibles para la siguiente extracción
+                const indexEnDisponibles = cartasDisponibles.indexOf(cartaElegida);
+                if (indexEnDisponibles > -1) {
+                    cartasDisponibles.splice(indexEnDisponibles, 1);
+                }
+            }
+
+            // 6. Volver a armar el mazo (reintegrar y barajar)
+            // mazo = cartasDisponibles (cartas que NO salieron en este turno) + cartasSacadas
+            mazo.length = 0; // Limpiar el mazo original
+            mazo.push(...cartasDisponibles, ...cartasSacadas); 
+            
+            barajar(mazo); // Barajar el mazo completo
+
+            return cartasSacadas;
         }
 
         /**
-         * Saca la carta superior del mazo al hacer click.
+         * Determina qué mazo usar basado en el turno actual y la probabilidad.
          */
-        mazoDiv.addEventListener('click', () => {
-            if (mazoRevuelto.length === 0) {
-                cartaSacadaDiv.innerHTML = '<p>¡El mazo está vacío! Fin del juego.</p>';
-                mazoDiv.title = "Mazo vacío";
-                // Opcional: remover la imagen de tapa para mostrar el vacío
-                mazoDiv.innerHTML = '<p class="mensaje-mazo" style="background: none; color: #333;">Mazo vacío</p>';
-                return;
+        function decidirMazo() {
+            // TURNO 1 a 3 (Años 2025, 2026, 2027) tienen 100% Mazo Bueno
+            if (turnoActual <= 3) {
+                return 'BUENO';
             }
 
-            // Saca la última carta (la superior del mazo)
-            const cartaSacadaUrl = mazoRevuelto.pop();
+            // TURNO 4 en adelante (Probabilidad 80/20)
+            const probabilidad = Math.random(); 
 
-            // Actualiza el contador
-            conteoMazoSpan.textContent = mazoRevuelto.length;
+            if (probabilidad < 0.8) { 
+                return 'BUENO';
+            } else { 
+                return 'MALO';
+            }
+        }
 
-            // Muestra la carta sacada
-            cartaSacadaDiv.innerHTML = ''; 
-            const imagenCarta = document.createElement('img');
-            imagenCarta.src = cartaSacadaUrl;
-            imagenCarta.alt = "Carta sacada";
-            cartaSacadaDiv.appendChild(imagenCarta);
-        });
+        /**
+         * Muestra las cartas en el DOM.
+         */
+        function mostrarCartas(urls) {
+            cartasMostradasDiv.innerHTML = ''; // Limpiar el tablero
+            
+            urls.forEach(url => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('carta-mostrada-item');
+                const imagenCarta = document.createElement('img');
+                imagenCarta.src = url;
+                imagenCarta.alt = "Carta de escenario";
+                itemDiv.appendChild(imagenCarta);
+                cartasMostradasDiv.appendChild(itemDiv);
+            });
+        }
+
+        /**
+         * Ejecuta la lógica completa de un turno (Año).
+         */
+        function ejecutarTurno() {
+            if (turnoActual === MAX_TURNOS) return; // Evitar ejecutar después del final
+            
+            turnoActual++;
+            const anio = ANIO_INICIO + turnoActual - 1;
+            
+            contadorTurnoDiv.textContent = `Año: ${anio}`;
+
+            // 1. Decidir qué mazo usar
+            const mazoSeleccionado = decidirMazo();
+            let cartasSacadasEnTurno = [];
+
+            if (mazoSeleccionado === 'BUENO') {
+                // Saca 3 cartas del mazo bueno, evitando repetición con las últimas sacadas
+                cartasSacadasEnTurno = sacarCartas(mazoBueno, 3, ultimasCartasSacadas);
+            } else {
+                // Saca 1 carta del mazo malo
+                cartasSacadasEnTurno = sacarCartas(mazoMalo, 1, ultimasCartasSacadas);
+            }
+
+            // 2. Actualizar las últimas cartas sacadas para el PRÓXIMO turno
+            ultimasCartasSacadas = cartasSacadasEnTurno;
+
+            // 3. Mostrar el resultado
+            mostrarCartas(cartasSacadasEnTurno);
+            
+            // 4. Verificar fin del juego
+            if (turnoActual === MAX_TURNOS) {
+                btnTurno.textContent = "Fin del Juego";
+                btnTurno.disabled = true;
+                contadorTurnoDiv.innerHTML = '<span class="mensaje-fin">FIN DEL JUEGO</span>';
+            } else {
+                 btnTurno.textContent = `Avanzar al año ${anio + 1}`;
+            }
+        }
+        
+        /**
+         * Inicializa la aplicación y los mazos.
+         */
+        function inicializarJuego() {
+            // Clonar y barajar los mazos iniciales
+            mazoBueno = barajar([...URLS_MAZO_BUENO]);
+            mazoMalo = barajar([...URLS_MAZO_MALO]);
+            
+            // Configurar el estado inicial
+            turnoActual = 0; 
+            ultimasCartasSacadas = []; // Sin cartas sacadas al inicio
+            contadorTurnoDiv.textContent = `Simulación ${ANIO_INICIO} - ${ANIO_FIN}`;
+            btnTurno.textContent = `Iniciar Simulación (${ANIO_INICIO})`;
+            btnTurno.disabled = false;
+        }
+
+        // --- 3. EVENT LISTENERS ---
+        
+        btnTurno.addEventListener('click', ejecutarTurno);
 
         // Inicia el juego automáticamente al cargar la página
-        inicializarMazo(); 
-
+        inicializarJuego(); 
     </script>
 </body>
 </html>
